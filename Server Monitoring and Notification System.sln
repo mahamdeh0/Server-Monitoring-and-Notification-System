@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35208.52
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server Statistics Collection Service", "Server Statistics Collection Service\Server Statistics Collection Service.csproj", "{7C83F336-013F-4B7C-9E85-E2A09C61A651}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7C83F336-013F-4B7C-9E85-E2A09C61A651}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C83F336-013F-4B7C-9E85-E2A09C61A651}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C83F336-013F-4B7C-9E85-E2A09C61A651}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C83F336-013F-4B7C-9E85-E2A09C61A651}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {414218AC-63FC-4B8A-8BB2-C518F2E78A75}
+	EndGlobalSection
+EndGlobal
