@@ -4,6 +4,6 @@ namespace Message_Processing_and_Anomaly_Detection.Interfaces
 {
     public interface IMongoDbService
     {
-        void InsertStatistics(ServerStatistics statistics);
+        Task InsertStatisticsAsync(ServerStatistics statistics);
     }
 }
