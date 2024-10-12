@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server Statistics Collectio
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Message Processing and Anomaly Detection", "Message Processing and Anomaly Detection\Message Processing and Anomaly Detection.csproj", "{31223403-E2DD-4740-B45D-118796CC0ECF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalRServer", "SignalRServer\SignalRServer.csproj", "{F8C5F143-436E-4345-8647-B9398F93777B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignalRServer", "SignalRServer\SignalRServer.csproj", "{F8C5F143-436E-4345-8647-B9398F93777B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SignalR Event Consumer Service", "SignalR Event Consumer Service\SignalR Event Consumer Service.csproj", "{4B9E866F-43A6-4CEF-81E8-9CCD09FFBFAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{F8C5F143-436E-4345-8647-B9398F93777B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8C5F143-436E-4345-8647-B9398F93777B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8C5F143-436E-4345-8647-B9398F93777B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B9E866F-43A6-4CEF-81E8-9CCD09FFBFAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B9E866F-43A6-4CEF-81E8-9CCD09FFBFAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B9E866F-43A6-4CEF-81E8-9CCD09FFBFAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B9E866F-43A6-4CEF-81E8-9CCD09FFBFAB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
