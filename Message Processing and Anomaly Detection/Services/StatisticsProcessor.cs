@@ -1,5 +1,5 @@
 ﻿using Message_Processing_and_Anomaly_Detection.Interfaces;
-using Message_Processing_and_Anomaly_Detection.Models; 
+using Message_Processing_and_Anomaly_Detection.Models;
 namespace Message_Processing_and_Anomaly_Detection.Services
 {
     public class StatisticsProcessor
@@ -10,22 +10,9 @@ namespace Message_Processing_and_Anomaly_Detection.Services
         private readonly ISignalRService _signalRService;
         private ServerStatistics _previousStatistics;
 
-        public StatisticsProcessor(IMessageQueue messageQueue, IMongoDbService mongoDbService, IAnomalyDetectionService anomalyDetectionService, ISignalRService signalRService)
+        private async Task ProcessStatistics(ServerStatistics statistics)
         {
-            _messageQueue = messageQueue;
-            _mongoDbService = mongoDbService;
-            _anomalyDetectionService = anomalyDetectionService;
-            _signalRService = signalRService;
-        }
-
-        public void Start()
-        {
-            _messageQueue.Subscribe("ServerStatistics", ProcessStatistics);
-        }
-
-        private void ProcessStatistics(ServerStatistics statistics)
-        {
-            _mongoDbService.InsertStatisticsAsync(statistics);
+            await _mongoDbService.InsertStatisticsAsync(statistics); 
 
             if (_previousStatistics != null)
             {
@@ -52,5 +39,6 @@ namespace Message_Processing_and_Anomaly_Detection.Services
 
             _previousStatistics = statistics;
         }
+
     }
 }
