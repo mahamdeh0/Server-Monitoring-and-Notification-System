@@ -24,28 +24,38 @@ namespace Message_Processing_and_Anomaly_Detection.Services
 
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
+            _channel.ExchangeDeclare("ServerStatisticsExchange", ExchangeType.Topic);
+        }
+
+        public void Subscribe(Action<ServerStatistics> messageHandler)
+        {
 
             _channel.ExchangeDeclare("ServerStatisticsExchange", ExchangeType.Topic);
-
-            string queueName = _channel.QueueDeclare().QueueName;
-            _channel.QueueBind(queueName, "ServerStatisticsExchange", "ServerStatistics.*");
-        }
-
-        public void Subscribe(string topic, Action<ServerStatistics> handleMessage)
-        {
-            string queueName = _channel.QueueDeclare().QueueName;
-            _channel.QueueBind(queueName, "ServerStatisticsExchange", topic);
+            _channel.QueueDeclare("Queue", durable: false, exclusive: false, autoDelete: false);
+            _channel.QueueBind("Queue", "ServerStatisticsExchange", routingKey: $"{"ServerStatistics."}*");
 
             var consumer = new EventingBasicConsumer(_channel);
-            consumer.Received += (model, ea) =>
+            consumer.Received += (sender, args) =>
             {
-                var body = ea.Body.ToArray();
+                var body = args.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
                 var statistics = JsonSerializer.Deserialize<ServerStatistics>(message);
-                handleMessage(statistics);
+
+                statistics.ServerIdentifier = args.RoutingKey.Substring("ServerStatistics.".Length);
+                messageHandler(statistics);
+
+                _channel.BasicAck(args.DeliveryTag, multiple: false);
             };
 
-            _channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
+            _channel.BasicConsume("Queue", autoAck: false, consumer);
         }
+
+        public void Dispose()
+        {
+            _channel?.Close();
+            _connection?.Close();
+        }
+
+        
     }
 }

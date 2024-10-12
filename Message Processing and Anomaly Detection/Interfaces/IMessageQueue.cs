@@ -4,6 +4,6 @@ namespace Message_Processing_and_Anomaly_Detection.Interfaces
 {
     public interface IMessageQueue
     {
-        void Subscribe(string topic, Action<ServerStatistics> handleMessage);
+        public void Subscribe(Action<ServerStatistics> messageHandler);
     }
 }
