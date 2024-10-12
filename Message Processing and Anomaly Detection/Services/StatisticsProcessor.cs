@@ -10,6 +10,14 @@ namespace Message_Processing_and_Anomaly_Detection.Services
         private readonly ISignalRService _signalRService;
         private ServerStatistics _previousStatistics;
 
+        public StatisticsProcessor(IMessageQueue messageQueue, IMongoDbService mongoDbService, IAnomalyDetectionService anomalyDetectionService, ISignalRService signalRService)
+        {
+            _messageQueue = messageQueue;
+            _mongoDbService = mongoDbService;
+            _anomalyDetectionService = anomalyDetectionService;
+            _signalRService = signalRService;
+        }
+
         public async Task ProcessStatistics(ServerStatistics statistics)
         {
             try
@@ -47,5 +55,5 @@ namespace Message_Processing_and_Anomaly_Detection.Services
             }
         }
     }
-
 }
+
