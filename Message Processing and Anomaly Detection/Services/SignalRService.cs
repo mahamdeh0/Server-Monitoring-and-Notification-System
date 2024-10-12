@@ -12,12 +12,31 @@ namespace Message_Processing_and_Anomaly_Detection.Services
             _connection = new HubConnectionBuilder()
                 .WithUrl(signalRUrl)
                 .Build();
-            _connection.StartAsync().Wait();
+            StartConnection();
         }
 
-        public void SendAlert(string message)
+        private async void StartConnection()
         {
-            _connection.InvokeAsync("SendAlert", message);
+            try
+            {
+                await _connection.StartAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error connecting to SignalR: {ex.Message}");
+            }
+        }
+
+        public async void SendAlert(string message)
+        {
+            try
+            {
+                await _connection.InvokeAsync("SendAlert", message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending alert: {ex.Message}");
+            }
         }
     }
 }
