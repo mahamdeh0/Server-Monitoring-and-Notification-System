@@ -10,35 +10,42 @@ namespace Message_Processing_and_Anomaly_Detection.Services
         private readonly ISignalRService _signalRService;
         private ServerStatistics _previousStatistics;
 
-        private async Task ProcessStatistics(ServerStatistics statistics)
+        public async Task ProcessStatistics(ServerStatistics statistics)
         {
-            await _mongoDbService.InsertStatisticsAsync(statistics); 
-
-            if (_previousStatistics != null)
+            try
             {
-                if (_anomalyDetectionService.CheckForMemoryAnomaly(statistics, _previousStatistics))
+                await _mongoDbService.InsertStatisticsAsync(statistics);
+
+                if (_previousStatistics != null)
                 {
-                    _signalRService.SendAlert("Memory Anomaly Detected!!!!!!!!");
+                    if (_anomalyDetectionService.CheckForMemoryAnomaly(statistics, _previousStatistics))
+                    {
+                        await _signalRService.SendAlertAsync("Memory Anomaly Detected!");
+                    }
+
+                    if (_anomalyDetectionService.CheckForCpuAnomaly(statistics, _previousStatistics))
+                    {
+                        await _signalRService.SendAlertAsync("CPU Anomaly Detected!");
+                    }
                 }
 
-                if (_anomalyDetectionService.CheckForCpuAnomaly(statistics, _previousStatistics))
+                if (_anomalyDetectionService.CheckForHighMemoryUsage(statistics))
                 {
-                    _signalRService.SendAlert("CPU Anomaly Detected!!!!!!!!");
+                    await _signalRService.SendAlertAsync("High Memory Usage Detected!");
                 }
-            }
 
-            if (_anomalyDetectionService.CheckForHighMemoryUsage(statistics))
+                if (_anomalyDetectionService.CheckForHighCpuUsage(statistics))
+                {
+                    await _signalRService.SendAlertAsync("High CPU Usage Detected!");
+                }
+
+                _previousStatistics = statistics;
+            }
+            catch (Exception ex)
             {
-                _signalRService.SendAlert("High Memory Usage Detected!!!!!!!");
+                Console.WriteLine($"Error processing statistics: {ex.Message}");
             }
-
-            if (_anomalyDetectionService.CheckForHighCpuUsage(statistics))
-            {
-                _signalRService.SendAlert("High CPU Usage Detected!!!!!!!!!");
-            }
-
-            _previousStatistics = statistics;
         }
-
     }
+
 }
