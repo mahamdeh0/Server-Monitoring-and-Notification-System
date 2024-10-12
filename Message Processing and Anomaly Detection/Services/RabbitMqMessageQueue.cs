@@ -24,11 +24,18 @@ namespace Message_Processing_and_Anomaly_Detection.Services
 
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
+
             _channel.ExchangeDeclare("ServerStatisticsExchange", ExchangeType.Topic);
+
+            string queueName = _channel.QueueDeclare().QueueName;
+            _channel.QueueBind(queueName, "ServerStatisticsExchange", "ServerStatistics.*");
         }
 
         public void Subscribe(string topic, Action<ServerStatistics> handleMessage)
         {
+            string queueName = _channel.QueueDeclare().QueueName;
+            _channel.QueueBind(queueName, "ServerStatisticsExchange", topic);
+
             var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += (model, ea) =>
             {
@@ -38,7 +45,7 @@ namespace Message_Processing_and_Anomaly_Detection.Services
                 handleMessage(statistics);
             };
 
-            _channel.BasicConsume(queue: topic, autoAck: true, consumer: consumer);
+            _channel.BasicConsume(queue: queueName, autoAck: true, consumer: consumer);
         }
     }
 }
