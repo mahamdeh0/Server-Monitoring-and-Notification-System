@@ -21,13 +21,18 @@ namespace Server_Statistics_Collection_Service.Services
                 Password = password
             };
 
+            factory.ClientProvidedName = "Server StatisticsSent Collector Service";
+
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
-            _channel.ExchangeDeclare("ServerStatisticsExchange", ExchangeType.Topic);
         }
 
         public async Task PublishAsync(string topic, ServerStatistics statistics)
         {
+            _channel.ExchangeDeclare("ServerStatisticsExchange", ExchangeType.Topic);
+            _channel.QueueDeclare("Queue", durable: false, exclusive: false, autoDelete: false);
+            _channel.QueueBind("Queue", "ServerStatisticsExchange", topic);
+
             string jsonMessage = JsonSerializer.Serialize(statistics);
             var body = Encoding.UTF8.GetBytes(jsonMessage);
 
