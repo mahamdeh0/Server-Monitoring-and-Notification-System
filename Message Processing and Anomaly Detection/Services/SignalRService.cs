@@ -27,7 +27,7 @@ namespace Message_Processing_and_Anomaly_Detection.Services
             }
         }
 
-        public async void SendAlert(string message)
+        public async Task SendAlert(string message)
         {
             try
             {

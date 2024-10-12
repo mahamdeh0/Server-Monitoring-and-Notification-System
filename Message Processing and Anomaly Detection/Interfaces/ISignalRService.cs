@@ -2,6 +2,6 @@
 {
     public interface ISignalRService
     {
-        void SendAlert(string message);
+        Task SendAlertAsync(string message);
     }
 }
