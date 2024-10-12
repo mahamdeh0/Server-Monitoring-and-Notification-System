@@ -4,6 +4,6 @@ namespace Server_Statistics_Collection_Service.Interfaces
 {
     public interface IMessageQueue
     {
-        void Publish(string topic, ServerStatistics statistics);
+        public Task PublishAsync(string topic, ServerStatistics statistics);
     }
 }

@@ -26,23 +26,29 @@ namespace Server_Statistics_Collection_Service.Services
             _channel.ExchangeDeclare("ServerStatisticsExchange", ExchangeType.Topic);
         }
 
-        public void Publish(string topic, ServerStatistics statistics)
+        public async Task PublishAsync(string topic, ServerStatistics statistics)
         {
             string jsonMessage = JsonSerializer.Serialize(statistics);
             var body = Encoding.UTF8.GetBytes(jsonMessage);
 
-            _channel.BasicPublish(
+            await Task.Run(() => _channel.BasicPublish(
                 exchange: "ServerStatisticsExchange",
                 routingKey: topic,
                 basicProperties: null,
                 body: body
-            );
+            ));
         }
+
 
         public void Dispose()
         {
             _channel?.Close();
             _connection?.Close();
+        }
+
+        public Task Publish(string topic, ServerStatistics statistics)
+        {
+            throw new NotImplementedException();
         }
     }
 }

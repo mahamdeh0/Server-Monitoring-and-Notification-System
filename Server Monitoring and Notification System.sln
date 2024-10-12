@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35208.52
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server Statistics Collection Service", "Server Statistics Collection Service\Server Statistics Collection Service.csproj", "{7C83F336-013F-4B7C-9E85-E2A09C61A651}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server Statistics Collection Service", "Server Statistics Collection Service\Server Statistics Collection Service.csproj", "{7C83F336-013F-4B7C-9E85-E2A09C61A651}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Message Processing and Anomaly Detection", "Message Processing and Anomaly Detection\Message Processing and Anomaly Detection.csproj", "{31223403-E2DD-4740-B45D-118796CC0ECF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{7C83F336-013F-4B7C-9E85-E2A09C61A651}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7C83F336-013F-4B7C-9E85-E2A09C61A651}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C83F336-013F-4B7C-9E85-E2A09C61A651}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31223403-E2DD-4740-B45D-118796CC0ECF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31223403-E2DD-4740-B45D-118796CC0ECF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31223403-E2DD-4740-B45D-118796CC0ECF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31223403-E2DD-4740-B45D-118796CC0ECF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

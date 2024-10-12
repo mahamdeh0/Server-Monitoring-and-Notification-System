@@ -39,11 +39,10 @@ namespace Server_Statistics_Collection_Service.Services
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Server statistics collection service starting");
-            _timer = new Timer(CollectAndPublishStatistics, null, TimeSpan.Zero, TimeSpan.FromSeconds(_samplingInterval));
+            _timer = new Timer(async _ => await CollectAndPublishStatistics(), null, TimeSpan.Zero, TimeSpan.FromSeconds(_samplingInterval));
             return Task.CompletedTask;
         }
-
-        private void CollectAndPublishStatistics(object state)
+        private async Task CollectAndPublishStatistics()
         {
             try
             {
@@ -56,7 +55,7 @@ namespace Server_Statistics_Collection_Service.Services
                 };
 
                 string topic = $"ServerStatistics.{_serverIdentifier}";
-                _messageQueue.Publish(topic, statistics);
+                await _messageQueue.PublishAsync(topic, statistics);
 
                 _logger.LogInformation("Published statistics: {0}", JsonSerializer.Serialize(statistics));
             }
@@ -65,6 +64,8 @@ namespace Server_Statistics_Collection_Service.Services
                 _logger.LogError(ex, "Error while collecting or publishing server statistics");
             }
         }
+
+
 
         private double GetMemoryUsage()
         {
