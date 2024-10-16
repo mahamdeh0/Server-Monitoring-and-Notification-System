@@ -18,6 +18,8 @@ namespace Server_Statistics_Collection_Service.Services
         private string _serverIdentifier;
 
         private PerformanceCounter _cpuCounter;
+        private PerformanceCounter _memoryUsageCounter;
+        private PerformanceCounter _availableMemoryCounter;
 
         public StatisticsCollectorService(IMessageQueue messageQueue, IConfiguration configuration, ILogger<StatisticsCollectorService> logger)
         {
@@ -29,11 +31,23 @@ namespace Server_Statistics_Collection_Service.Services
             _serverIdentifier = _configuration.GetValue<string>("ServerStatisticsConfig:ServerIdentifier");
 
             _cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+            _memoryUsageCounter = new PerformanceCounter("Process", "Working Set", Process.GetCurrentProcess().ProcessName);  // الذاكرة المستخدمة
+            _availableMemoryCounter = new PerformanceCounter("Memory", "Available MBytes");  // الذاكرة المتاحة
         }
 
         private double GetCpuUsage()
         {
             return _cpuCounter.NextValue();
+        }
+
+        private double GetMemoryUsage()
+        {
+            return _memoryUsageCounter.NextValue() / (1024 * 1024);
+        }
+
+        private double GetAvailableMemory()
+        {
+            return _availableMemoryCounter.NextValue();
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -42,6 +56,7 @@ namespace Server_Statistics_Collection_Service.Services
             _timer = new Timer(async _ => await CollectAndPublishStatistics(), null, TimeSpan.Zero, TimeSpan.FromSeconds(_samplingInterval));
             return Task.CompletedTask;
         }
+
         private async Task CollectAndPublishStatistics()
         {
             try
@@ -65,20 +80,6 @@ namespace Server_Statistics_Collection_Service.Services
             }
         }
 
-
-
-        private double GetMemoryUsage()
-        {
-            var currentProcess = Process.GetCurrentProcess();
-            return currentProcess.WorkingSet64 / (1024 * 1024);
-        }
-
-        private double GetAvailableMemory()
-        {
-            var totalMemoryInBytes = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes;
-            return totalMemoryInBytes / (1024 * 1024);
-        }
-
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Server statistics collection service stopping");
@@ -89,7 +90,9 @@ namespace Server_Statistics_Collection_Service.Services
         public void Dispose()
         {
             _timer?.Dispose();
+            _cpuCounter?.Dispose();
+            _memoryUsageCounter?.Dispose();
+            _availableMemoryCounter?.Dispose();
         }
     }
 }
-
