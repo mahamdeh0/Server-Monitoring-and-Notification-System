@@ -1,5 +1,6 @@
 ﻿using Message_Processing_and_Anomaly_Detection.Interfaces;
 using Message_Processing_and_Anomaly_Detection.Services;
+using Message_Processing_and_Anomaly_Detection.Services.AnomalyCheck;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,19 +20,24 @@ namespace Message_Processing_and_Anomaly_Detection
                 {
                     var configuration = context.Configuration;
 
-                    services.AddSingleton<IAnomalyDetectionService, AnomalyDetectionService>();
+                    services.AddTransient<IAnomalyCheck>(provider =>
+                    {
+                        var anomalyThreshold = configuration.GetValue<double>("AnomalyDetectionConfig:MemoryUsageAnomalyThresholdPercentage");
+                        var usageThreshold = configuration.GetValue<double>("AnomalyDetectionConfig:MemoryUsageThresholdPercentage");
+                        return new MemoryAnomalyCheck(anomalyThreshold, usageThreshold);
+                    });
+
+                    services.AddTransient<IAnomalyCheck>(provider =>
+                    {
+                        var anomalyThreshold = configuration.GetValue<double>("AnomalyDetectionConfig:CpuUsageAnomalyThresholdPercentage");
+                        var usageThreshold = configuration.GetValue<double>("AnomalyDetectionConfig:CpuUsageThresholdPercentage");
+                        return new CpuAnomalyCheck(anomalyThreshold, usageThreshold);
+                    });
+
                     services.AddSingleton<ISignalRService, SignalRService>(provider =>
                     {
                         var signalRUrl = configuration.GetValue<string>("SignalRConfig:SignalRUrl");
                         return new SignalRService(signalRUrl);
-                    });
-
-                    services.AddSingleton<IMongoDbService, MongoDbService>(provider =>
-                    {
-                        var connectionString = configuration.GetValue<string>("MongoDbConfig:ConnectionString");
-                        var databaseName = configuration.GetValue<string>("MongoDbConfig:DatabaseName");
-                        var collectionName = configuration.GetValue<string>("MongoDbConfig:CollectionName");
-                        return new MongoDbService(connectionString, databaseName, collectionName);
                     });
 
                     services.AddSingleton<IMessageQueue, RabbitMqMessageQueue>(provider =>
@@ -43,6 +49,16 @@ namespace Message_Processing_and_Anomaly_Detection
                         return new RabbitMqMessageQueue(hostName, port, userName, password);
                     });
 
+                    services.AddSingleton<IMongoDbService, MongoDbService>(provider =>
+                    {
+                        var connectionString = configuration.GetValue<string>("MongoDBConfig:ConnectionString");
+                        var databaseName = configuration.GetValue<string>("MongoDBConfig:DatabaseName");
+                        var collectionName = configuration.GetValue<string>("MongoDBConfig:CollectionName");
+                        return new MongoDbService(connectionString, databaseName, collectionName);
+                    });
+
+                    services.AddSingleton<AnomalyChecker>();
+                    services.AddSingleton<HighUsageChecker>();
                     services.AddSingleton<StatisticsProcessor>();
                 })
                 .Build();
@@ -50,7 +66,7 @@ namespace Message_Processing_and_Anomaly_Detection
             var messageQueue = host.Services.GetRequiredService<IMessageQueue>();
             var statisticsProcessor = host.Services.GetRequiredService<StatisticsProcessor>();
 
-            messageQueue.Subscribe( async (statistics) =>
+            messageQueue.Subscribe(async (statistics) =>
             {
                 await statisticsProcessor.ProcessStatistics(statistics);
             });

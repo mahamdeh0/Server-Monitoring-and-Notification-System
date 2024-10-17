@@ -1,59 +1,53 @@
 ﻿using Message_Processing_and_Anomaly_Detection.Interfaces;
 using Message_Processing_and_Anomaly_Detection.Models;
+using Message_Processing_and_Anomaly_Detection.Services.AnomalyCheck;
+
 namespace Message_Processing_and_Anomaly_Detection.Services
 {
     public class StatisticsProcessor
     {
         private readonly IMessageQueue _messageQueue;
         private readonly IMongoDbService _mongoDbService;
-        private readonly IAnomalyDetectionService _anomalyDetectionService;
-        private readonly ISignalRService _signalRService;
+        private readonly AnomalyChecker _anomalyChecker;
+        private readonly HighUsageChecker _highUsageChecker;
         private ServerStatistics _previousStatistics;
 
-        public StatisticsProcessor(IMessageQueue messageQueue, IMongoDbService mongoDbService, IAnomalyDetectionService anomalyDetectionService, ISignalRService signalRService)
+        public StatisticsProcessor(IMessageQueue messageQueue, IMongoDbService mongoDbService,
+                                   AnomalyChecker anomalyChecker, HighUsageChecker highUsageChecker)
         {
             _messageQueue = messageQueue;
             _mongoDbService = mongoDbService;
-            _anomalyDetectionService = anomalyDetectionService;
-            _signalRService = signalRService;
+            _anomalyChecker = anomalyChecker;
+            _highUsageChecker = highUsageChecker;
+        }
+
+        private async Task SaveStatisticsAsync(ServerStatistics statistics)
+        {
+            await _mongoDbService.InsertStatisticsAsync(statistics);
         }
 
         public async Task ProcessStatistics(ServerStatistics statistics)
         {
-            try
+     
+            await SaveStatisticsAsync(statistics);
+
+            await CheckHighUsage(statistics);
+            if (_previousStatistics != null)
             {
-                await _mongoDbService.InsertStatisticsAsync(statistics);
-
-                if (_previousStatistics != null)
-                {
-                    if (_anomalyDetectionService.CheckForMemoryAnomaly(statistics, _previousStatistics))
-                    {
-                        await _signalRService.SendAlertAsync("Memory Anomaly Detected!");
-                    }
-
-                    if (_anomalyDetectionService.CheckForCpuAnomaly(statistics, _previousStatistics))
-                    {
-                        await _signalRService.SendAlertAsync("CPU Anomaly Detected!");
-                    }
-                }
-
-                if (_anomalyDetectionService.CheckForHighMemoryUsage(statistics))
-                {
-                    await _signalRService.SendAlertAsync("High Memory Usage Detected!");
-                }
-
-                if (_anomalyDetectionService.CheckForHighCpuUsage(statistics))
-                {
-                    await _signalRService.SendAlertAsync("High CPU Usage Detected!");
-                }
-
-                _previousStatistics = statistics;
+                await CheckAnomalies(statistics);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error processing statistics: {ex.Message}");
-            }
+
+            _previousStatistics = statistics;
+        }
+
+        private async Task CheckAnomalies(ServerStatistics statistics)
+        {
+            await _anomalyChecker.CheckForAnomaliesAsync(statistics, _previousStatistics);
+        }
+
+        private async Task CheckHighUsage(ServerStatistics statistics)
+        {
+            await _highUsageChecker.CheckForHighUsageAsync(statistics);
         }
     }
 }
-
