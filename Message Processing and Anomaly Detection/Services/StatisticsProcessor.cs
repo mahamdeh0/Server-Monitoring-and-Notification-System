@@ -1,59 +1,71 @@
-﻿using Message_Processing_and_Anomaly_Detection.Interfaces;
+﻿using MediatR;
+using Message_Processing_and_Anomaly_Detection.Interfaces;
 using Message_Processing_and_Anomaly_Detection.Models;
+using Message_Processing_and_Anomaly_Detection.Services.AnomalyCheck;
+
 namespace Message_Processing_and_Anomaly_Detection.Services
 {
     public class StatisticsProcessor
     {
-        private readonly IMessageQueue _messageQueue;
-        private readonly IMongoDbService _mongoDbService;
-        private readonly IAnomalyDetectionService _anomalyDetectionService;
+        private readonly IMediator _mediator;
         private readonly ISignalRService _signalRService;
         private ServerStatistics _previousStatistics;
+        private readonly IMongoDbService _mongoDbService;
 
-        public StatisticsProcessor(IMessageQueue messageQueue, IMongoDbService mongoDbService, IAnomalyDetectionService anomalyDetectionService, ISignalRService signalRService)
+        public StatisticsProcessor(IMediator mediator, ISignalRService signalRService, IMongoDbService mongoDbService)
         {
-            _messageQueue = messageQueue;
-            _mongoDbService = mongoDbService;
-            _anomalyDetectionService = anomalyDetectionService;
+            _mediator = mediator;
             _signalRService = signalRService;
+            _mongoDbService = mongoDbService;
+
+        }
+        private async Task SaveStatisticsAsync(ServerStatistics statistics)
+        {
+            await _mongoDbService.InsertStatisticsAsync(statistics);
         }
 
         public async Task ProcessStatistics(ServerStatistics statistics)
         {
-            try
+
+            await SaveStatisticsAsync(statistics);
+            await CheckHighUsage(statistics);
+
+            if (_previousStatistics != null)
             {
-                await _mongoDbService.InsertStatisticsAsync(statistics);
-
-                if (_previousStatistics != null)
-                {
-                    if (_anomalyDetectionService.CheckForMemoryAnomaly(statistics, _previousStatistics))
-                    {
-                        await _signalRService.SendAlertAsync("Memory Anomaly Detected!");
-                    }
-
-                    if (_anomalyDetectionService.CheckForCpuAnomaly(statistics, _previousStatistics))
-                    {
-                        await _signalRService.SendAlertAsync("CPU Anomaly Detected!");
-                    }
-                }
-
-                if (_anomalyDetectionService.CheckForHighMemoryUsage(statistics))
-                {
-                    await _signalRService.SendAlertAsync("High Memory Usage Detected!");
-                }
-
-                if (_anomalyDetectionService.CheckForHighCpuUsage(statistics))
-                {
-                    await _signalRService.SendAlertAsync("High CPU Usage Detected!");
-                }
-
-                _previousStatistics = statistics;
+                await CheckAnomalies(statistics);
             }
-            catch (Exception ex)
+
+            _previousStatistics = statistics;
+
+        }
+
+        private async Task CheckAnomalies(ServerStatistics statistics)
+        {
+            var anomalyRequests = new List<AnomalyCheckRequest>
             {
-                Console.WriteLine($"Error processing statistics: {ex.Message}");
+                new AnomalyCheckRequest(statistics, _previousStatistics)
+            };
+
+            foreach (var request in anomalyRequests)
+            {
+                if (await _mediator.Send(request))
+                {
+                    await _signalRService.SendAlertAsync("Anomaly Detected!");
+                }
+            }
+        }
+
+        private async Task CheckHighUsage(ServerStatistics statistics)
+        {
+            if (await _mediator.Send(new HighUsageCheckRequest(statistics)))
+            {
+                await _signalRService.SendAlertAsync("High Memory Usage Detected!");
+            }
+
+            if (await _mediator.Send(new HighUsageCheckRequest(statistics)))
+            {
+                await _signalRService.SendAlertAsync("High CPU Usage Detected!");
             }
         }
     }
 }
-

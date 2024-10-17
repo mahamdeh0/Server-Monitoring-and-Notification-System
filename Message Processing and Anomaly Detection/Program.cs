@@ -19,7 +19,8 @@ namespace Message_Processing_and_Anomaly_Detection
                 {
                     var configuration = context.Configuration;
 
-                    services.AddSingleton<IAnomalyDetectionService, AnomalyDetectionService>();
+                    services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+
                     services.AddSingleton<ISignalRService, SignalRService>(provider =>
                     {
                         var signalRUrl = configuration.GetValue<string>("SignalRConfig:SignalRUrl");
@@ -50,7 +51,7 @@ namespace Message_Processing_and_Anomaly_Detection
             var messageQueue = host.Services.GetRequiredService<IMessageQueue>();
             var statisticsProcessor = host.Services.GetRequiredService<StatisticsProcessor>();
 
-            messageQueue.Subscribe( async (statistics) =>
+            messageQueue.Subscribe(async (statistics) =>
             {
                 await statisticsProcessor.ProcessStatistics(statistics);
             });
