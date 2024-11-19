@@ -1,5 +1,6 @@
 ﻿using Message_Processing_and_Anomaly_Detection.Interfaces;
 using Message_Processing_and_Anomaly_Detection.Services;
+using Message_Processing_and_Anomaly_Detection.Services.AnomalyCheck;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,7 +20,6 @@ namespace Message_Processing_and_Anomaly_Detection
                 {
                     var configuration = context.Configuration;
 
-                    services.AddSingleton<IAnomalyDetectionService, AnomalyDetectionService>();
                     services.AddSingleton<ISignalRService, SignalRService>(provider =>
                     {
                         var signalRUrl = configuration.GetValue<string>("SignalRConfig:SignalRUrl");
@@ -43,14 +43,26 @@ namespace Message_Processing_and_Anomaly_Detection
                         return new RabbitMqMessageQueue(hostName, port, userName, password);
                     });
 
+                    services.AddSingleton<IAnomalyObserver, MemoryAnomalyObserver>();
+                    services.AddSingleton<IAnomalyObserver, CpuAnomalyObserver>();
+                    services.AddSingleton<IAnomalyObserver, HighMemoryUsageObserver>();
+                    services.AddSingleton<IAnomalyObserver, HighCpuUsageObserver>();
+
                     services.AddSingleton<StatisticsProcessor>();
                 })
                 .Build();
 
-            var messageQueue = host.Services.GetRequiredService<IMessageQueue>();
             var statisticsProcessor = host.Services.GetRequiredService<StatisticsProcessor>();
 
-            messageQueue.Subscribe( async (statistics) =>
+            var observers = host.Services.GetServices<IAnomalyObserver>();
+            foreach (var observer in observers)
+            {
+                statisticsProcessor.RegisterObserver(observer);
+            }
+
+            var messageQueue = host.Services.GetRequiredService<IMessageQueue>();
+
+            messageQueue.Subscribe(async (statistics) =>
             {
                 await statisticsProcessor.ProcessStatistics(statistics);
             });
